@@ -25,9 +25,17 @@ function Canvas({ roomId, socket }: { roomId: string; socket: WebSocket }) {
   }, []);
 
   useEffect(() => {
+    let cleanup: (() => void) | undefined;
+    
     if (canvasRef.current && dimensions.width > 0) {
-      drawInit(canvasRef.current, roomId, socket, selectedTool);
+      drawInit(canvasRef.current, roomId, socket, selectedTool).then(cb => {
+        cleanup = cb;
+      });
     }
+
+    return () => {
+      if (cleanup) cleanup();
+    };
   }, [canvasRef, dimensions, roomId, socket, selectedTool]);
 
   if (dimensions.width === 0) return null;

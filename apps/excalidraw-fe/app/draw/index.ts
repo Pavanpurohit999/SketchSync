@@ -31,85 +31,75 @@ export async function drawInit(
   selectedTool: Tool
 ) {
   currentTool = selectedTool;
-
   const ctx = canvas.getContext("2d");
+  if (!ctx) return;
 
   let existingShapes: Shape[] = await getExistingShapes(roomId);
-  if (!ctx) {
-    return;
-  }
 
-  socket.onmessage = (event) => {
-    const message = JSON.parse(event.data);
-
-    if (message.type == "chat") {
-      const parsedShape = JSON.parse(message.messages);
-      existingShapes.push(parsedShape);
-      clearCanvas(ctx, existingShapes, canvas);
+  // Define the message handler
+  const onMessage = (event: MessageEvent) => {
+    try {
+      const message = JSON.parse(event.data);
+      if (message.type === "chat") {
+        const parsedShape = JSON.parse(message.messages);
+        existingShapes.push(parsedShape);
+        clearCanvas(ctx, existingShapes, canvas);
+      }
+    } catch (e) {
+      console.error("Error parsing WS message", e);
     }
   };
 
+  socket.addEventListener("message", onMessage);
   clearCanvas(ctx, existingShapes, canvas);
+
   let clicked = false;
   let startX = 0;
   let startY = 0;
   let currentPencilPoints: { x: number; y: number }[] = [];
 
-  // Remove old listeners by cloning the canvas
-  const newCanvas = canvas.cloneNode(true) as HTMLCanvasElement;
-  canvas.parentNode?.replaceChild(newCanvas, canvas);
-  const newCtx = newCanvas.getContext("2d");
-  if (!newCtx) return;
-  clearCanvas(newCtx, existingShapes, newCanvas);
+  const getCanvasCoords = (e: MouseEvent) => {
+    const rect = canvas.getBoundingClientRect();
+    return {
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top,
+    };
+  };
 
-  newCanvas.addEventListener("mousedown", (e) => {
+  const handleMouseDown = (e: MouseEvent) => {
     clicked = true;
-    startX = e.clientX;
-    startY = e.clientY;
+    const coords = getCanvasCoords(e);
+    startX = coords.x;
+    startY = coords.y;
 
     if (currentTool === "pencil") {
-      currentPencilPoints = [{ x: e.clientX, y: e.clientY }];
+      currentPencilPoints = [coords];
     }
-  });
+  };
 
-  newCanvas.addEventListener("mouseup", (e) => {
+  const handleMouseUp = (e: MouseEvent) => {
     if (!clicked) return;
     clicked = false;
+    const coords = getCanvasCoords(e);
 
     let shape: Shape;
 
     if (currentTool === "rect") {
-      const width = e.clientX - startX;
-      const height = e.clientY - startY;
-      shape = {
-        type: "rect",
-        x: startX,
-        y: startY,
-        height,
-        width,
-      };
+      const width = coords.x - startX;
+      const height = coords.y - startY;
+      shape = { type: "rect", x: startX, y: startY, height, width };
     } else if (currentTool === "circle") {
       const radius = Math.sqrt(
-        Math.pow(e.clientX - startX, 2) + Math.pow(e.clientY - startY, 2)
+        Math.pow(coords.x - startX, 2) + Math.pow(coords.y - startY, 2)
       );
-      shape = {
-        type: "circle",
-        centreX: startX,
-        centreY: startY,
-        radius,
-      };
+      shape = { type: "circle", centreX: startX, centreY: startY, radius };
     } else {
-      // pencil
-      currentPencilPoints.push({ x: e.clientX, y: e.clientY });
-      shape = {
-        type: "pencil",
-        points: [...currentPencilPoints],
-      };
+      currentPencilPoints.push(coords);
+      shape = { type: "pencil", points: [...currentPencilPoints] };
       currentPencilPoints = [];
     }
 
     existingShapes.push(shape);
-
     socket.send(
       JSON.stringify({
         type: "chat",
@@ -117,50 +107,58 @@ export async function drawInit(
         roomId,
       })
     );
-  });
+    clearCanvas(ctx, existingShapes, canvas);
+  };
 
-  newCanvas.addEventListener("mousemove", (e) => {
+  const handleMouseMove = (e: MouseEvent) => {
     if (clicked) {
+      const coords = getCanvasCoords(e);
       if (currentTool === "rect") {
-        const width = e.clientX - startX;
-        const height = e.clientY - startY;
-        clearCanvas(newCtx, existingShapes, newCanvas);
-        newCtx.strokeStyle = "rgba(255,255,255,0.8)";
-        newCtx.lineWidth = 2;
-        newCtx.setLineDash([5, 5]);
-        newCtx.strokeRect(startX, startY, width, height);
-        newCtx.setLineDash([]);
+        const width = coords.x - startX;
+        const height = coords.y - startY;
+        clearCanvas(ctx, existingShapes, canvas);
+        ctx.strokeStyle = "rgba(255,255,255,0.8)";
+        ctx.setLineDash([5, 5]);
+        ctx.strokeRect(startX, startY, width, height);
+        ctx.setLineDash([]);
       } else if (currentTool === "circle") {
         const radius = Math.sqrt(
-          Math.pow(e.clientX - startX, 2) + Math.pow(e.clientY - startY, 2)
+          Math.pow(coords.x - startX, 2) + Math.pow(coords.y - startY, 2)
         );
-        clearCanvas(newCtx, existingShapes, newCanvas);
-        newCtx.strokeStyle = "rgba(255,255,255,0.8)";
-        newCtx.lineWidth = 2;
-        newCtx.setLineDash([5, 5]);
-        newCtx.beginPath();
-        newCtx.arc(startX, startY, radius, 0, Math.PI * 2);
-        newCtx.stroke();
-        newCtx.setLineDash([]);
+        clearCanvas(ctx, existingShapes, canvas);
+        ctx.strokeStyle = "rgba(255,255,255,0.8)";
+        ctx.setLineDash([5, 5]);
+        ctx.beginPath();
+        ctx.arc(startX, startY, radius, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.setLineDash([]);
       } else if (currentTool === "pencil") {
-        currentPencilPoints.push({ x: e.clientX, y: e.clientY });
-        clearCanvas(newCtx, existingShapes, newCanvas);
-        // Draw the in-progress pencil stroke
+        currentPencilPoints.push(coords);
+        clearCanvas(ctx, existingShapes, canvas);
         if (currentPencilPoints.length > 1) {
-          newCtx.strokeStyle = "rgba(255,255,255,0.8)";
-          newCtx.lineWidth = 2;
-          newCtx.lineCap = "round";
-          newCtx.lineJoin = "round";
-          newCtx.beginPath();
-          newCtx.moveTo(currentPencilPoints[0].x, currentPencilPoints[0].y);
+          ctx.strokeStyle = "rgba(255,255,255,0.8)";
+          ctx.beginPath();
+          ctx.moveTo(currentPencilPoints[0].x, currentPencilPoints[0].y);
           for (let i = 1; i < currentPencilPoints.length; i++) {
-            newCtx.lineTo(currentPencilPoints[i].x, currentPencilPoints[i].y);
+            ctx.lineTo(currentPencilPoints[i].x, currentPencilPoints[i].y);
           }
-          newCtx.stroke();
+          ctx.stroke();
         }
       }
     }
-  });
+  };
+
+  canvas.addEventListener("mousedown", handleMouseDown);
+  canvas.addEventListener("mouseup", handleMouseUp);
+  canvas.addEventListener("mousemove", handleMouseMove);
+
+  // Return a cleanup function to remove listeners when tool changes or component unmounts
+  return () => {
+    socket.removeEventListener("message", onMessage);
+    canvas.removeEventListener("mousedown", handleMouseDown);
+    canvas.removeEventListener("mouseup", handleMouseUp);
+    canvas.removeEventListener("mousemove", handleMouseMove);
+  };
 }
 
 function clearCanvas(

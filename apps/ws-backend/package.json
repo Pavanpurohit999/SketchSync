@@ -15,7 +15,9 @@
     "@types/ws": "^8.18.1"
   },
   "dependencies": {
+    "@types/jsonwebtoken": "^9.0.10",
     "dotenv": "^17.2.3",
+    "jsonwebtoken": "^9.0.3",
     "ws": "^8.19.0"
   }
 }

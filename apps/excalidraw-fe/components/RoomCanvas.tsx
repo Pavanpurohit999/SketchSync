@@ -10,38 +10,35 @@ function RoomCanvas({ roomId }: { roomId: string }) {
   const router = useRouter();
 
   useEffect(() => {
-    // Read the token from localStorage — saved automatically at sign-in
-    const token = localStorage.getItem("token");
+    let isCurrent = true;
+    setError(""); 
 
+    const token = localStorage.getItem("token");
     if (!token) {
-      // No token means the user isn't signed in, redirect them
       router.push("/signin");
       return;
     }
 
-    // Connect WebSocket with the token from localStorage (no manual insertion!)
     const ws = new WebSocket(`${WS_URL}?token=${token}`);
 
     ws.onopen = () => {
+      if (!isCurrent) return;
       setSocket(ws);
-      ws.send(
-        JSON.stringify({
-          type: "join_room",
-          roomId,
-        })
-      );
+      ws.send(JSON.stringify({ type: "join_room", roomId }));
     };
 
     ws.onerror = () => {
+      if (!isCurrent) return;
       setError("Failed to connect. Your session may have expired.");
     };
 
     ws.onclose = () => {
+      if (!isCurrent) return;
       setSocket(null);
     };
 
-    // Cleanup: close WebSocket when component unmounts
     return () => {
+      isCurrent = false;
       if (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING) {
         ws.close();
       }

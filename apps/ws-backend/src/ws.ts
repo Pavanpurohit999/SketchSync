@@ -16,37 +16,47 @@ const users: User[] = [];
 
 function checkUser(token: string): string | null {
   try {
+    console.log("Verifying token...");
     const decoded = jwt.verify(token, JWT_SECRET);
     if (typeof decoded === "string") {
+      console.log("Token decoded as string, expected object");
       return null;
     }
 
     if (!decoded || !decoded.userId) {
+      console.log("Token missing userId in payload");
       return null;
     }
 
+    console.log("Token verified successfully for userId:", decoded.userId);
     return decoded.userId;
-  } catch (error) {
+  } catch (error: any) {
+    console.log("❌ Token verification error:", error.message);
     return null;
   }
 }
 
 wss.on("connection", function connection(ws, request) {
   const url = request.url;
+  console.log("New connection request, URL:", url);
   if (!url) {
+    console.log("No URL found in request");
     return;
   }
   const query = url?.split("?")[1];
   const params = new URLSearchParams(query);
   const token = params.get("token") || "";
 
+  console.log("Extracted token:", token ? "(exists)" : "(missing)");
   const userId = checkUser(token);
 
   if (!userId) {
+    console.log("User verification failed, closing connection");
     ws.close();
     return;
   }
 
+  console.log("User verified:", userId);
   users.push({
     userId,
     rooms: [],
@@ -62,22 +72,28 @@ wss.on("connection", function connection(ws, request) {
     }
     try {
       if (parsedData.type === "join_room") {
-        const user = users.find((user) => user.ws === ws);
-        if (!user) return;
-        user?.rooms.push(parsedData.roomId);
+        const user = users.find((u) => u.ws === ws);
+        if (user && !user.rooms.includes(parsedData.roomId)) {
+          user.rooms.push(parsedData.roomId);
+        }
       }
 
       if (parsedData.type === "leave_room") {
-        const user = users.find((x) => x.ws === ws);
-        if (!user) return null;
-        user.rooms = user?.rooms.filter((user) => user === parsedData.room);
+        const user = users.find((u) => u.ws === ws);
+        if (user) {
+          user.rooms = user.rooms.filter((r) => r !== parsedData.roomId);
+        }
       }
 
       if (parsedData.type === "chat") {
         const roomId = parsedData.roomId;
         const message = parsedData.message;
 
-        if (isNaN(roomId)) {
+        console.log("Received chat message for room:", roomId);
+
+        const numericRoomId = Number(roomId);
+        if (isNaN(numericRoomId)) {
+          console.log("Invalid Room ID received:", roomId);
           ws.send(
             JSON.stringify({
               type: "error",
@@ -86,17 +102,20 @@ wss.on("connection", function connection(ws, request) {
           );
           return;
         }
+
         try {
-          await prisma.chat.create({
+          console.log("Attempting to save shape to DB for room:", numericRoomId);
+          const savedChat = await prisma.chat.create({
             data: {
-              roomId: Number(roomId), 
+              roomId: numericRoomId,
               messages: message,
               userId,
             },
           });
+          console.log("Shape saved successfully, ID:", savedChat.id);
 
           users.forEach((user) => {
-            if (user.rooms.includes(roomId)) {
+            if (user.rooms.includes(roomId.toString())) {
               user.ws.send(
                 JSON.stringify({
                   type: "chat",
@@ -107,9 +126,8 @@ wss.on("connection", function connection(ws, request) {
               );
             }
           });
-        } catch (dbError) {
-          console.error("Database error:", dbError);
-          // Optionally notify the sender
+        } catch (dbError: any) {
+          console.error("❌ DATABASE SAVE ERROR:", dbError.message);
           ws.send(
             JSON.stringify({
               type: "error",
@@ -120,6 +138,14 @@ wss.on("connection", function connection(ws, request) {
       }
     } catch (error) {
       console.log(error);
+    }
+  });
+
+  ws.on("close", () => {
+    console.log("Connection closed for user:", userId);
+    const index = users.findIndex((u) => u.ws === ws);
+    if (index !== -1) {
+      users.splice(index, 1);
     }
   });
 });
