@@ -1,0 +1,21 @@
+{
+  "name": "ws-backend",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "build": "tsc -b",
+    "start": "node dist/ws.js",
+    "dev": "tsc -b && node dist/ws.js"
+  },
+  "devDependencies": {
+    "@repo/common-backend": "*",
+    "@repo/db": "*",
+    "@repo/typescript-config": "*",
+    "@types/ws": "^8.18.1"
+  },
+  "dependencies": {
+    "dotenv": "^17.2.3",
+    "ws": "^8.19.0"
+  }
+}

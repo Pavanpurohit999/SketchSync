@@ -1,0 +1,26 @@
+{
+  "name": "@repo/db",
+  "version": "1.0.0",
+  "main": "./dist/client.js",
+  "types": "./dist/client.d.ts",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:deploy": "prisma migrate deploy"
+  },
+  "devDependencies": {
+    "@prisma/adapter-pg": "^7.3.0",
+    "prisma": "^7.3.0"
+  },
+  "dependencies": {
+    "@prisma/client": "^7.3.0"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/client.d.ts",
+      "default": "./dist/client.js"
+    }
+  }
+}

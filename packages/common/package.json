@@ -1,0 +1,13 @@
+{
+  "name": "@repo/common",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "devDependencies": {
+    "@repo/typescript-config": "*",
+    "zod": "^4.3.6"
+  },
+  "exports": {
+    "./schema": "./src/schema.ts"
+  }
+}

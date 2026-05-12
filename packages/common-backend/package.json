@@ -1,0 +1,12 @@
+{
+  "name": "@repo/common-backend",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "devDependencies": {
+    "@repo/typescript-config": "*"
+  },
+  "exports": {
+    "./token": "./src/index.ts"
+  }
+}
