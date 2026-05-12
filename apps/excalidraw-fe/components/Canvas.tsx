@@ -2,10 +2,10 @@
 import { drawInit } from "@/app/draw";
 import React, { useRef, useEffect, useState } from "react";
 import { IconButton } from "./IconButton";
-import { Circle, Pencil, RectangleHorizontal, ArrowLeft } from "lucide-react";
+import { Circle, Pencil, RectangleHorizontal, ArrowLeft, Hand } from "lucide-react";
 import { useRouter } from "next/navigation";
 
-export type Tool = "rect" | "circle" | "pencil";
+export type Tool = "rect" | "circle" | "pencil" | "hand";
 
 function Canvas({ roomId, socket }: { roomId: string; socket: WebSocket }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -81,6 +81,13 @@ function Topbar({
 
       {/* Tool Palette */}
       <div className="flex gap-1 p-1.5 bg-[#1e1e1e]/90 backdrop-blur-md border border-white/10 rounded-xl shadow-2xl">
+        <IconButton
+          icon={<Hand className="w-5 h-5" />}
+          onClick={() => setSelectedTool("hand")}
+          isActive={selectedTool === "hand"}
+          tooltip="Pan (Hand)"
+        />
+        <div className="w-px h-6 bg-white/10 mx-1" />
         <IconButton
           icon={<RectangleHorizontal className="w-5 h-5" />}
           onClick={() => setSelectedTool("rect")}
