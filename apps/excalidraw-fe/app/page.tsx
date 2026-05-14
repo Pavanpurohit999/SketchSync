@@ -122,7 +122,7 @@ export default function Home() {
               </svg>
             </Link>
             <Link
-              href="https://github.com/pavanpurohit999/Excalidraw"
+              href="https://github.com/pavanpurohit999/SketchSync"
               target="_blank"
               className="w-full sm:w-auto px-8 py-3.5 bg-white/5 hover:bg-white/10 border border-white/10 text-white font-semibold rounded-xl transition-all flex items-center justify-center gap-2"
             >

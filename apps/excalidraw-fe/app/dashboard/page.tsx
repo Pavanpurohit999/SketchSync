@@ -129,7 +129,7 @@ export default function Dashboard() {
       {/* Main Content */}
       <div className="relative z-10 max-w-4xl mx-auto px-6 pt-32 pb-20">
         <div className="text-center mb-12">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-b from-white to-white/60">
+          <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-clip-text text-transparent bg-linear-to-b from-white to-white/60">
             Your Boards
           </h1>
           <p className="text-gray-400 text-lg">
@@ -153,7 +153,7 @@ export default function Dashboard() {
         <div className="grid md:grid-cols-2 gap-8 max-w-3xl mx-auto">
           {/* Create Room Card */}
           <div className="bg-[#1e1e1e] border border-white/10 rounded-2xl p-8 hover:border-[#6965db]/30 transition-colors group relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-[#6965db]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            <div className="absolute inset-0 bg-linear-to-br from-[#6965db]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
             <div className="relative z-10">
               <div className="w-12 h-12 bg-[#6965db]/10 rounded-xl flex items-center justify-center mb-6">
                 <svg className="w-6 h-6 text-[#6965db]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -198,7 +198,7 @@ export default function Dashboard() {
 
           {/* Join Room Card */}
           <div className="bg-[#1e1e1e] border border-white/10 rounded-2xl p-8 hover:border-emerald-500/30 transition-colors group relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            <div className="absolute inset-0 bg-linear-to-br from-emerald-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
             <div className="relative z-10">
               <div className="w-12 h-12 bg-emerald-500/10 rounded-xl flex items-center justify-center mb-6">
                 <svg className="w-6 h-6 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
